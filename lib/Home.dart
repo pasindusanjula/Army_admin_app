@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'QR_code.dart';
+import 'Issued_QR.dart';
+import 'Vehicle_history.dart';
 
 class Pasi extends StatefulWidget {
   const Pasi({Key? key}) : super(key: key);
@@ -18,6 +20,13 @@ class _PasiState extends State<Pasi> {
   // Firestore instance
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
+  // Function to clear input fields
+  void _clearFields() {
+    _vehicleNoController.clear();
+    _driverNameController.clear();
+    _driverNoController.clear();
+  }
+
   // Submit Function to Save Data to Firestore
   Future<void> _submitData() async {
     final vehicleNo = _vehicleNoController.text.trim();
@@ -34,17 +43,20 @@ class _PasiState extends State<Pasi> {
           'timestamp': FieldValue.serverTimestamp(),
         });
 
-        // Navigate to QR Code page
+        // Prepare data to send to QR Code Page
         final data = {
           'vehicleNo': vehicleNo,
           'driverName': driverName,
           'driverNo': driverNo,
         };
 
+        // Navigate to QR Code Page
         Navigator.push(
           context,
           MaterialPageRoute(builder: (context) => QRCodePage(data: data)),
-        );
+        ).then((_) {
+          _clearFields();
+        });
 
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Data uploaded successfully!')),
@@ -68,6 +80,33 @@ class _PasiState extends State<Pasi> {
       appBar: AppBar(
         title: const Text('Enter Vehicle Data'),
         backgroundColor: Colors.blueAccent,
+        actions: [
+          PopupMenuButton<String>(
+            onSelected: (value) {
+              if (value == 'Issued QR-Code') {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const IssuedQRPage()),
+                );
+              } else if (value == 'Vehicle History') {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const VehicleHistoryPage()),
+                );
+              }
+            },
+            itemBuilder: (BuildContext context) => [
+              const PopupMenuItem(
+                value: 'Issued QR-Code',
+                child: Text('Issued QR-Code'),
+              ),
+              const PopupMenuItem(
+                value: 'Vehicle History',
+                child: Text('Vehicle History'),
+              ),
+            ],
+          ),
+        ],
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
